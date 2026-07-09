@@ -1,0 +1,8 @@
+Column,Real Mean,Synthetic Mean,KS Statistic,KS p-value,t-statistic,t p-value,Same Distribution? (KS)
+income,1142873.52,1134006.98,0.028,0.1447,0.7293,0.4659,Yes 
+existing_loan_balance,259990.88,438571.28,0.495,0.0,-21.6711,0.0,No 
+age,31.51,32.4,0.0801,0.0,-7.0471,0.0,No 
+credit_score,574.35,575.15,0.0117,0.9752,-0.2045,0.838,Yes 
+savings_rate,0.29,0.3,0.0233,0.3227,-1.7526,0.0798,Yes 
+account_balance,252992.65,253110.5,0.0117,0.9752,-0.0332,0.9735,Yes 
+customer_id,1000.5,8355316.79,1.0,0.0,-172.0346,0.0,No 
