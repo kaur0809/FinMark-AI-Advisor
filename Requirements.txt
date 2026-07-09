@@ -1,0 +1,6 @@
+faker
+pandas
+numpy
+sdv
+scipy
+matplotlib
