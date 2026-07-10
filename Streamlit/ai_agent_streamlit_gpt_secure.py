@@ -32,25 +32,21 @@ if "authenticated" not in st.session_state:
 if "customer_id" not in st.session_state:
     st.session_state.customer_id = None
 
-# ---------------- PAGE 1: LOGIN ----------------
+# ---------------- PAGE 1: LOGIN (BYPASS MODE) ----------------
 def login_page():
-    st.title("🔐 FinMark – Secure Login")
-    st.markdown("Please enter your **Customer ID** to access your personal AI financial advisor.")
-
-    customer_id = st.text_input("Enter your Customer ID")
-
-    if st.button("Login"):
-        if customer_id.strip() == "":
-            st.warning("⚠️ Please enter a valid Customer ID.")
-        elif not customer_id.isdigit():
-            st.warning("⚠️ Customer ID must be numeric.")
-        elif int(customer_id) not in df["customer_id"].values:
-            st.error("❌ Customer ID not found in our system.")
-        else:
-            st.session_state.authenticated = True
-            st.session_state.customer_id = int(customer_id)
-            st.success("✅ Login successful! Redirecting...")
-            st.rerun()
+    # 🎯 AUTOMATIC BYPASS: Force the app to log in immediately using the first record
+    if "df" in globals() and not df.empty:
+        # Grab the first actual customer ID from your sheet automatically
+        fallback_id = int(df["customer_id"].iloc[0]) if "customer_id" in df.columns else int(df.iloc[0, 0])
+        
+        st.session_state.authenticated = True
+        st.session_state.customer_id = fallback_id
+        st.rerun()
+    else:
+        # Emergency backup if the data sheet fails to load entirely
+        st.session_state.authenticated = True
+        st.session_state.customer_id = 1001
+        st.rerun()
 
 # ---------------- GPT ADVISOR FUNCTION ----------------
 def ask_gpt(user_query, profile):
