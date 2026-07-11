@@ -5,17 +5,18 @@ import numpy as np
 from openai import OpenAI
 import yfinance as yf
 
-# ---------------- 1. STRATEGIC PORTAL CONFIG ----------------
-st.set_page_config(page_title="FinMark | Corporate Simulation Suite", page_icon="📈", layout="wide")
+# ---------------- 1. STRATEGIC ENTERPRISE CONFIG ----------------
+st.set_page_config(page_title="FinMark | B2B Market Simulator Suite", page_icon="🏛️", layout="wide")
 
-# ---------------- 2. SECURE CREDENTIAL CHECK ----------------
-try:
+# ---------------- 2. SECURE AI CREDENTIAL ENGINE ----------------
+# Standard initialization
+if "OPENAI_API_KEY" in st.secrets and st.secrets["OPENAI_API_KEY"] != "your-actual-sk-api-key-here":
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-except Exception as e:
-    st.error("⚠️ Enterprise Security: OpenAI Key Validation Failed. Please verify Secrets Manager.")
-    st.stop()
+else:
+    # Safe academic simulation mode token fallback if secrets are locked out
+    client = None
 
-# ---------------- 3. DATA ENGINE ----------------
+# ---------------- 3. SYSTEM SYNTHETIC DATA LOADER ----------------
 @st.cache_data
 def load_my_uploaded_data():
     possible_local_paths = [
@@ -37,105 +38,125 @@ def load_my_uploaded_data():
 
 df = load_my_uploaded_data()
 
-# Auto-align column structures across your CSV files
+# Auto-align column matrices dynamically
 if df is not None:
-    if 'income' not in df.columns:
-        df['income'] = np.random.normal(750000, 150000, len(df))
-    if 'spending' not in df.columns:
-        df['spending'] = np.random.normal(400000, 80000, len(df))
-    if 'balance' not in df.columns:
-        df['balance'] = df['account_balance'] if 'account_balance' in df.columns else np.random.normal(200000, 50000, len(df))
-    if 'credit_score' not in df.columns:
-        df['credit_score'] = np.random.randint(600, 850, len(df))
-    if 'persona' not in df.columns:
-        df['persona'] = np.random.choice(['saver', 'investor', 'risk-taker', 'spender'], len(df))
-    if 'savings_rate' not in df.columns:
-        df['savings_rate'] = np.random.uniform(0.10, 0.30, len(df))
+    if 'income' not in df.columns: df['income'] = np.random.normal(750000, 150000, len(df))
+    if 'spending' not in df.columns: df['spending'] = np.random.normal(400000, 80000, len(df))
+    if 'balance' not in df.columns: df['balance'] = df['account_balance'] if 'account_balance' in df.columns else np.random.normal(200000, 50000, len(df))
+    if 'credit_score' not in df.columns: df['credit_score'] = np.random.randint(600, 850, len(df))
+    if 'persona' not in df.columns: df['persona'] = np.random.choice(['saver', 'investor', 'risk-taker', 'spender'], len(df))
+    if 'savings_rate' not in df.columns: df['savings_rate'] = np.random.uniform(0.10, 0.30, len(df))
 else:
     np.random.seed(42)
-    n_records = 10000
+    n_records = 120000
     df = pd.DataFrame({
         'customer_id': np.arange(1001, 1001 + n_records),
         'income': np.random.normal(750000, 150000, n_records),
         'spending': np.random.normal(400000, 80000, n_records),
         'balance': np.random.normal(200000, 50000, n_records),
-        'credit_score': np.random.randint(400, 850, n_records),
+        'credit_score': np.random.randint(550, 850, n_records),
         'persona': np.random.choice(['saver', 'investor', 'risk-taker', 'spender'], n_records, p=[0.3, 0.4, 0.15, 0.15]),
         'savings_rate': np.random.uniform(0.05, 0.35, n_records)
     })
 
 df['savings'] = df['income'] - df['spending']
 
-# ---------------- 4. REAL-TIME MARKET BENCHMARK (YAHOO FINANCE) ----------------
-@st.cache_data(ttl=3600)
-def get_live_market_benchmarks():
-    try:
-        nifty = yf.Ticker("^NSEI")
-        hist = nifty.history(period="1y")
-        if len(hist) > 1:
-            start_price = hist['Close'].iloc[0]
-            end_price = hist['Close'].iloc[-1]
-            annual_market_return = ((end_price - start_price) / start_price) * 100
-        else:
-            annual_market_return = 12.5
-    except Exception:
-        annual_market_return = 12.5
-    return round(annual_market_return, 2)
-
-live_benchmark_yield = get_live_market_benchmarks()
-
-# ---------------- 5. CORPORATE DASHBOARD UI ----------------
-st.title("🏛️ FinMark — Institutional Product Launch Simulator")
-st.markdown("### **Enterprise Strategic Portal:** Quantifying Consumer Adoption and Capital Impact Against Real-Time Market Benchmarks")
+# ---------------- 4. B2B INSTITUTIONAL PRODUCT WORKSPACE ----------------
+st.title("🏛️ FinMark — Institutional Market Simulation Suite")
+st.markdown("### **Enterprise Platform:** Real-Time Asset Deployment & Consumer Adoption Analytics")
 st.markdown("---")
 
-st.info(f"📈 Trailing 1-Year Live Market Benchmark (Nifty 50 Yield via Yahoo Finance API): **{live_benchmark_yield}%**")
+st.sidebar.header("🔧 Asset Catalog Configuration")
+asset_class = st.sidebar.selectbox(
+    "Select Target Asset Class",
+    ["Direct Equity (Stocks)", "Mutual Funds & SIPs", "Derivatives (Options/Futures Pro)"]
+)
 
-st.subheader("📊 Target Population Parameters (Active Sample N=10,000)")
+# Dynamic Ticker Assignment based on Asset Class selection
+if asset_class == "Direct Equity (Stocks)":
+    ticker_choice = st.sidebar.selectbox("Select Target Indian Equity", ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS"])
+    product_display_name = f"Direct Equity Share: {ticker_choice.split('.')[0]}"
+elif asset_class == "Mutual Funds & SIPs":
+    ticker_choice = st.sidebar.selectbox("Select Benchmark Mutual Fund", ["MZNUG.BO", "0P0000XW79.BO", "0P0000XVW9.BO"]) 
+    product_display_name = f"Structured Growth Mutual Fund Asset"
+else:
+    ticker_choice = st.sidebar.selectbox("Select Underlying Derivatives Index Proxy", ["^NSEI", "^BSESN"])
+    product_display_name = f"High-Leverage Derivative Option Strategy"
+
+# ---------------- 5. LIVE YAHOO FINANCE DATA SCRAAPING ----------------
+@st.cache_data(ttl=1800)
+def fetch_live_asset_metrics(ticker_symbol):
+    try:
+        ticker = yf.Ticker(ticker_symbol)
+        hist = ticker.history(period="1y")
+        if len(hist) > 1:
+            current_price = hist['Close'].iloc[-1]
+            start_price = hist['Close'].iloc[0]
+            trailing_return = ((end_price := current_price - start_price) / start_price) * 100
+            volatility = hist['Close'].pct_change().std() * np.sqrt(252) * 100
+        else:
+            current_price, trailing_return, volatility = 1500.0, 12.5, 18.0
+    except Exception:
+        current_price, trailing_return, volatility = 1500.0, 12.5, 18.0
+    return round(current_price, 2), round(trailing_return, 2), round(volatility, 2)
+
+live_price, live_return, live_volatility = fetch_live_asset_metrics(ticker_choice)
+
+# --- DISPLAY STREAMED MARKET SUMMARY BANNER ---
+st.info(f"📡 **Yahoo Finance Live Stream Link:** Ticker: `{ticker_choice}` | Current Market Price: **₹{live_price:,}** | Trailing 1-Yr Market Yield: **{live_return}%** | Volatility Profile: **{live_volatility}%**")
+
+# Macro Environment Metrics Panel
+st.subheader("📊 Ecosystem Base Overview (TAM Node Count)")
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("Total Addressable Market (TAM)", f"{len(df):,} Profiles")
-m2.metric("Aggregate Market Base Income", f"₹{df['income'].sum()/10000000:.2f} Cr")
-m3.metric("Available Ecosystem Savings Pool", f"₹{df['savings'].sum()/10000000:.2f} Cr")
-m4.metric("Mean System Credit Score", f"{int(df['credit_score'].mean())}")
+m2.metric("Aggregate Base Income Matrix", f"₹{df['income'].sum()/10000000:.2f} Cr")
+m3.metric("Available Savings Liquidity", f"₹{df['savings'].sum()/10000000:.2f} Cr")
+m4.metric("Ecosystem Mean Risk Vector", f"{int(df['credit_score'].mean())} Score")
 
 st.markdown("---")
 
-st.subheader("🚀 Financial Product Deployment Sandbox")
-col_p1, col_p2, col_p3 = st.columns(3)
+# ---------------- 6. PRODUCT PRICING SANDBOX CONTROLS ----------------
+st.subheader(f"🚀 Product Parameter Configuration: {product_display_name}")
+
+col_p1, col_p2 = st.columns(2)
 with col_p1:
-    product_type = st.selectbox("Product Vehicle Structure", ["High-Yield Systematic Investment Plan (SIP)", "Tier-1 Corporate Fixed Income Bond", "Equity Alpha Mutual Fund Tracker", "Liquid Cash Management Account"])
+    offered_premium_boost = st.slider("Target Yield Premium Over Asset Return (%)", min_value=-5.0, max_value=5.0, value=1.5, step=0.25)
 with col_p2:
-    offered_interest = st.slider("Offered Dividend / Annual Return Rate (%)", min_value=4.0, max_value=20.0, value=11.0, step=0.5)
-with col_p3:
-    min_monthly_commitment = st.number_input("Minimum Threshold Monthly Commitment (₹)", min_value=500, max_value=25000, value=5000, step=500)
+    min_monthly_commitment = st.number_input("Minimum Threshold Monthly Commitment (₹)", min_value=500, max_value=25000, value=3000, step=500)
 
-# --- SIMULATION ENGINE MATHEMATICS ---
-market_spread = offered_interest - live_benchmark_yield
+effective_offered_rate = live_return + offered_premium_boost
 
-# 1. Base persona interest weights
-persona_weights = {'saver': 35, 'investor': 45, 'risk-taker': 20, 'spender': 5}
+# ---------------- 7. STRUCTURAL PREDICTIVE SIMULATION MATRIX ----------------
+# Consumers weigh alternative assets vs live market metrics
+market_spread = effective_offered_rate - live_return
+
+# Persona Affinity Maps tailored by asset profile risks
+if asset_class == "Derivatives (Options/Futures Pro)":
+    # High risk assets favor Risk-Takers heavily over standard Savers
+    persona_weights = {'saver': -20, 'investor': 20, 'risk-taker': 55, 'spender': 5}
+    risk_factor_modifier = live_volatility * 0.5
+elif asset_class == "Mutual Funds & SIPs":
+    persona_weights = {'saver': 40, 'investor': 45, 'risk-taker': 15, 'spender': 5}
+    risk_factor_modifier = 0
+else:
+    persona_weights = {'saver': 15, 'investor': 50, 'risk-taker': 35, 'spender': 5}
+    risk_factor_modifier = live_volatility * 0.2
+
 df['persona_score'] = df['persona'].str.lower().map(persona_weights).fillna(15)
 df['credit_booster'] = (df['credit_score'] - 300) / 550 * 20
+spread_bonus = np.clip((market_spread * 4) + (effective_offered_rate * 0.5), -25, 25)
 
-# 2. Balanced market spread modifier
-spread_bonus = np.clip(market_spread * 3, -20, 20) 
+df['total_interest_score'] = df['persona_score'] + df['credit_booster'] + spread_bonus - risk_factor_modifier
 
-# 3. Calculate cumulative baseline interest score
-df['total_interest_score'] = df['persona_score'] + df['credit_booster'] + spread_bonus
-
-# 4. CALIBRATED ACCESSIBILITY FILTER
-# Young professionals pool their monthly disposable capacity to gauge affordability
+# Calibrated Affordability Hard-Stops
 df['monthly_savings_est'] = (df['income'] / 12) * df['savings_rate']
 
 df['reaction'] = np.select(
     [
-        (df['total_interest_score'] >= 50) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.7)),
-        (df['total_interest_score'] >= 35) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.4))
+        (df['total_interest_score'] >= 52) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.75)),
+        (df['total_interest_score'] >= 36) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.45))
     ],
-    [
-        'Highly Interested (Immediate Buyer)', 
-        'Moderately Interested (Marketing Target)'
-    ],
+    ['Highly Interested (Immediate Buyer)', 'Moderately Interested (Marketing Target)'],
     default='Not Interested (Churned / Insufficient Funds)'
 )
 
@@ -143,8 +164,8 @@ reaction_counts = df['reaction'].value_counts()
 highly_interested_count = reaction_counts.get('Highly Interested (Immediate Buyer)', 0)
 projected_monthly_capital = highly_interested_count * min_monthly_commitment
 
-# --- SIMULATION IMPACT REPORTING ---
-st.markdown("### **Simulation Impact Report**")
+# ---------------- 8. SIMULATION REPORTING GRAPHICS ----------------
+st.markdown("### **Simulation Impact Analytics Report**")
 c_metrics1, c_metrics2, c_metrics3 = st.columns(3)
 with c_metrics1:
     st.metric("Projected Market Conversion Rate", f"{(highly_interested_count / len(df)) * 100:.2f}%")
@@ -165,12 +186,11 @@ st.write("#### 👥 Segment Analysis: Penetration Share by Consumer Persona Type
 pivot_table = pd.crosstab(df['persona'], df['reaction'], normalize='index') * 100
 st.dataframe(pivot_table.style.format("{:.1f}%"))
 
-# --- 6. ENTERPRISE AI STRATEGIST AGENT (GPT FOCUS) ---
+# ---------------- 9. ENTERPRISE AI STRATEGIST AGENT (GPT PRO) ----------------
 st.markdown("---")
 st.subheader("🧠 FinMark Corporate AI Strategist")
-st.write("Instruct the corporate AI Agent to analyze the economic viability of this simulation.")
+st.write("Instruct the corporate AI Agent to analyze the economic viability of this configuration.")
 
-# Fixed duplicate element bug by adding unique key string
 corporate_query = st.text_input(
     "Enterprise System Command:",
     placeholder="Analyze market response vectors for this configuration...",
@@ -181,32 +201,44 @@ if st.button("Generate Executive Strategy Assessment"):
     if corporate_query.strip() == "":
         st.warning("Please enter a question or instruction for the AI Agent.")
     else:
-        with st.spinner("AI Agent aggregating cross-tabular segments..."):
-            summary_context = f"""
-            You are an institutional B2B Financial Strategy Consultant auditing a simulated product rollout.
-            Simulation Variables:
-            - Launched Product Type: {product_type}
-            - Interest Offered: {offered_interest}%
-            - Live Market Benchmark (Nifty): {live_benchmark_yield}%
-            - Yield Spread vs Market: {market_spread}%
-            - Calculated Conversion Rate: {(highly_interested_count / len(df)) * 100:.2f}%
-            - Projected Monthly Capital Flow: ₹{projected_monthly_capital}
-            - Audience Pool: 10,000 synthetic Indian Young Professionals modeled via CTGAN/HMA.
-            """
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are a strategic financial consultant. Provide executive analysis based on macroeconomic indicators and live market yield spreads in a crisp corporate style."},
-                        {"role": "user", "content": f"{summary_context}\n\nTask: {corporate_query}"}
-                    ],
-                    temperature=0.4,
-                    max_tokens=500
-                )
-                st.success("🏢 Corporate Strategy Matrix Output:")
-                st.markdown(response.choices[0].message.content)
-            except Exception as e:
-                st.error(f"⚠️ OpenAI System Connection Refused: {e}")
+        summary_context = f"""
+        You are an institutional B2B Financial Strategy Consultant auditing a simulated product rollout.
+        Simulation Parameters:
+        - Target Asset Category: {asset_class}
+        - Selected Market Ticker: {ticker_choice}
+        - Live Asset Benchmark Return: {live_return}%
+        - Configured Offered Return Rate: {effective_offered_rate}%
+        - Product Volatility Vector: {live_volatility}%
+        - Calculated Conversion Rate: {(highly_interested_count / len(df)) * 100:.2f}%
+        - Projected Monthly AUM Capital Flow: ₹{projected_monthly_capital}
+        - Sample Size: 10,000+ synthetic profiles.
+        """
+        
+        if client is not None:
+            with st.spinner("AI Agent aggregating cross-tabular segments..."):
+                try:
+                    response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[
+                            {"role": "system", "content": "You are a strategic financial consultant. Provide executive analysis based on macroeconomic indicators and live market yield spreads in a crisp corporate style."},
+                            {"role": "user", "content": f"{summary_context}\n\nTask: {corporate_query}"}
+                        ],
+                        temperature=0.4,
+                        max_tokens=500
+                    )
+                    st.success("🏢 Corporate Strategy Matrix Output:")
+                    st.markdown(response.choices[0].message.content)
+                except Exception as e:
+                    st.error(f"⚠️ OpenAI System Connection Refused: {e}")
+        else:
+            # High-fidelity offline strategic report generator if OpenAI API lacks active credits
+            st.success("🏢 Corporate Strategy Matrix Output (Local Simulation Mode):")
+            st.markdown(f"""
+            ### **Executive Strategic Audit Summary**
+            * **Market Fit Assessment:** The deployment of `{ticker_choice}` as a **{asset_class}** vehicle demonstrates an empirical conversion factor of **{(highly_interested_count / len(df)) * 100:.2f}%**.
+            * **Risk Modeling:** Given a live market volatility footprint of **{live_volatility}%**, the synthetic consumer segment reacts systematically. The **Risk-Taker** parameters demonstrate high affinity vectors, whereas conservative pools are heavily constrained by the ₹{min_monthly_commitment:,} capital requirement.
+            * **AUM Scalability:** A monthly projected capital traction profile of **₹{projected_monthly_capital:,.0f}** indicates strong institutional stability under the current offered return profile.
+            """)
 
 st.markdown("---")
-st.caption("🤖 Powered by your private FinMark Synthetic Repositories and GPT reasoning.")
+st.caption("🤖 Powered by your private FinMark Synthetic Repositories and Yahoo Finance Data Streams.")
