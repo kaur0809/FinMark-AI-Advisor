@@ -178,6 +178,51 @@ if st.button("Generate Executive Strategy Assessment"):
                 st.markdown(response.choices[0].message.content)
             except Exception as e:
                 st.error(f"API Vector Error: {e}")
+# --- 5. ENTERPRISE AI STRATEGIST AGENT (GPT FOCUS) ---
+st.markdown("---")
+st.subheader("🧠 FinMark Corporate AI Strategist")
+st.write("Instruct the corporate AI Agent to analyze the economic viability and demographic patterns of this simulation.")
 
+corporate_query = st.text_input(
+    "Enterprise System Command:",
+    placeholder=f"Analyze market response vectors if we deploy a {product_type} offering {offered_interest}% returns."
+)
+
+if st.button("Generate Executive Strategy Assessment"):
+    if corporate_query.strip() == "":
+        st.warning("Please type a strategic command or question for the AI consultant.")
+    else:
+        with st.spinner("AI Agent aggregating cross-tabular segments..."):
+            
+            summary_context = f"""
+            You are an institutional B2B Financial Strategy Consultant auditing a simulated product rollout.
+            Simulation Variables:
+            - Launched Product Type: {product_type}
+            - Interest Offered: {offered_interest}%
+            - Required Commitment: ₹{min_monthly_commitment}/month
+            - Calculated Conversion Rate: {(highly_interested_count / len(df)) * 100:.2f}%
+            - Projected Monthly Capital Flow: ₹{projected_monthly_capital}
+            - Audience Pool: 10,000 synthetic Indian Young Professionals modeled via CTGAN/HMA.
+            """
+            
+            try:
+                # Optimized, bulletproof client syntax call
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a strategic financial consultant. Provide executive analysis based on macroeconomic indicators, pricing efficiency, and demographic volume insights in a crisp corporate style."},
+                        {"role": "user", "content": f"{summary_context}\n\nTask: {corporate_query}"}
+                    ],
+                    temperature=0.4,
+                    max_tokens=500
+                )
+                
+                # Render output explicitly
+                st.success("🏢 Corporate Strategy Matrix Output:")
+                st.markdown(response.choices[0].message.content)
+                
+            except Exception as e:
+                st.error(f"⚠️ OpenAI System Connection Refused: {e}")
+                st.info("💡 Quick Check: Double check that your OpenAI Key in your Streamlit Cloud Secrets hasn't expired or hit its credit limit!")
 st.markdown("---")
 st.caption("🤖 Powered by your private FinMark Synthetic Repositories and GPT reasoning.")
