@@ -9,9 +9,19 @@ import yfinance as yf
 # ---------------- 1. STRATEGIC ENTERPRISE CONFIG ----------------
 st.set_page_config(page_title="FinMark | B2B Market Simulator Suite", page_icon="🏛️", layout="wide")
 
-# ---------------- 2. SECURE AI CREDENTIAL ENGINE ----------------
-if "OPENAI_API_KEY" in st.secrets and st.secrets["OPENAI_API_KEY"] != "your-actual-sk-api-key-here":
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# ---------------- 2. SECURE SIDEBAR KEY CONFIGURATION ----------------
+st.sidebar.header("🔑 Authentication Framework")
+
+# Pull key from UI input box directly to bypass Streamlit Secrets Manager issues
+user_api_key = st.sidebar.text_input(
+    "Enter OpenAI API Key (sk-...):", 
+    type="password", 
+    placeholder="Paste your active sk-proj- key here..."
+)
+
+# Initialize the OpenAI Client dynamically based on user input
+if user_api_key.strip().startswith("sk-"):
+    client = OpenAI(api_key=user_api_key.strip())
 else:
     client = None
 
@@ -61,17 +71,14 @@ else:
 df['savings'] = df['income'] - df['spending']
 
 # ---------------- 4. B2B INSTITUTIONAL PRODUCT WORKSPACE ----------------
-st.title("🏛️ FinMark — Institutional Market Simulation Suite")
-st.markdown("### **Enterprise Platform:** Real-Time Asset Deployment & Consumer Adoption Analytics")
-st.markdown("---")
-
+st.sidebar.markdown("---")
 st.sidebar.header("🔧 Asset Catalog Configuration")
 asset_class = st.sidebar.selectbox(
     "Select Target Asset Class",
     ["Direct Equity (Stocks)", "Mutual Funds & SIPs", "Derivatives (Options/Futures Pro)"]
 )
 
-# 🌍 OPEN INPUT ENGINE: Enter ANY Yahoo Finance ticker live
+# Open Input Search Ticker Engine
 st.sidebar.markdown("### **Yahoo Finance Ticker Search**")
 if asset_class == "Direct Equity (Stocks)":
     default_ticker = "RELIANCE.NS"
@@ -91,7 +98,7 @@ def fetch_live_asset_metrics(ticker_symbol):
     try:
         ticker = yf.Ticker(ticker_symbol)
         
-        # Pulling clean history dynamically up to 2026
+        # Lookback frame anchored to the live 2026 execution calendar
         end_date = datetime.date(2026, 7, 11)
         start_date = end_date - datetime.timedelta(days=365)
         hist = ticker.history(start=start_date, end=end_date)
@@ -111,7 +118,11 @@ def fetch_live_asset_metrics(ticker_symbol):
 
 live_price, live_return, live_volatility, real_asset_name = fetch_live_asset_metrics(ticker_choice)
 
-# --- DISPLAY STREAMED MARKET SUMMARY BANNER ---
+# --- CORE PAGE LAYOUT ---
+st.title("🏛️ FinMark — Institutional Market Simulation Suite")
+st.markdown("### **Enterprise Platform:** Real-Time Asset Deployment & Consumer Adoption Analytics")
+st.markdown("---")
+
 st.info(f"📡 **Yahoo Finance Live Pipeline Connected:** Asset: `{real_asset_name}` (`{ticker_choice}`) | Current Price: **₹{live_price:,}** | Trailing 1-Yr Market Return: **{live_return}%** | Volatility Profile: **{live_volatility}%**")
 
 # Macro Environment Metrics Panel
@@ -129,13 +140,11 @@ st.subheader(f"🚀 Product Parameter Configuration: Launched via {real_asset_na
 
 col_p1, col_p2 = st.columns(2)
 with col_p1:
-    # 🎯 FIX: Changed from a small premium modifier to direct selection of the Total Target Return
     effective_offered_rate = st.slider("Total Target Offered Annual Return Rate (%)", min_value=1.0, max_value=40.0, value=14.0, step=0.5)
 with col_p2:
     min_monthly_commitment = st.number_input("Minimum Threshold Monthly Commitment (₹)", min_value=500, max_value=50000, value=3000, step=500)
 
 # ---------------- 7. STRUCTURAL PREDICTIVE SIMULATION MATRIX ----------------
-# The market spread measures how much your customized product beats the live asset's baseline performance
 market_spread = effective_offered_rate - live_return
 
 # Persona Risk Alignment System
@@ -151,8 +160,6 @@ else:
 
 df['persona_score'] = df['persona'].str.lower().map(persona_weights).fillna(15)
 df['credit_booster'] = (df['credit_score'] - 300) / 550 * 20
-
-# Balanced spread calculation to drive adoption kinetics
 spread_bonus = np.clip(market_spread * 2.5, -20, 25)
 
 df['total_interest_score'] = df['persona_score'] + df['credit_booster'] + spread_bonus - risk_factor_modifier
@@ -198,19 +205,21 @@ st.dataframe(pivot_table.style.format("{:.1f}%"))
 # ---------------- 9. ENTERPRISE AI STRATEGIST AGENT (GPT PRO) ----------------
 st.markdown("---")
 st.subheader("🧠 FinMark Corporate AI Strategist")
-st.write("Instruct the corporate AI Agent to analyze the economic viability of this configuration.")
+
+# Alert the user to input their key if they haven't already
+if client is None:
+    st.info("💡 To activate live AI text generation, enter your OpenAI API key in the authentication panel on the left sidebar.")
 
 corporate_query = st.text_input(
     "Enterprise System Command:",
     placeholder="Analyze market response vectors for this configuration...",
-    key="corporate_ai_input_final" 
+    key="corporate_ai_input_final_v3" 
 )
 
 if st.button("Generate Executive Strategy Assessment"):
     if corporate_query.strip() == "":
         st.warning("Please enter a question or instruction for the AI Agent.")
     else:
-        # Pre-compile variables explicitly to prevent inner scope string interpolation crashes
         current_conv_rate = f"{(highly_interested_count / len(df)) * 100:.2f}%"
         
         summary_context = f"""
@@ -227,7 +236,6 @@ if st.button("Generate Executive Strategy Assessment"):
         - Sample Size: 10,000+ synthetic profiles.
         """
         
-        # Track execution locally if the remote API client fails to initialize
         api_success = False
         
         if client is not None:
@@ -236,7 +244,7 @@ if st.button("Generate Executive Strategy Assessment"):
                     response = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": "You are a strategic financial consultant. Provide a sharp executive analysis based on macroeconomic indicators and live market yield spreads in a crisp corporate style. Use markdown clean formatting layout rules."},
+                            {"role": "system", "content": "You are a strategic financial consultant. Provide a sharp executive analysis based on macroeconomic indicators and live market yield spreads in a crisp corporate style."},
                             {"role": "user", "content": f"{summary_context}\n\nTask: {corporate_query}"}
                         ],
                         temperature=0.4,
@@ -246,14 +254,10 @@ if st.button("Generate Executive Strategy Assessment"):
                     st.markdown(response.choices[0].message.content)
                     api_success = True
                 except Exception as e:
-                    st.error(f"⚠️ OpenAI System Connection Refused: {e}")
-                    st.info("Bypassing crash pipeline: Switching to Local Analysis Engine automatically.")
+                    st.error(f"⚠️ OpenAI API Rejected Call: {e}")
         
-        # Smart rule-based calculation engine for the fallback dashboard output
         if not api_success:
             st.success("🏢 Corporate Strategy Matrix Output (Local Simulation Mode Engine):")
-            
-            # Formulate mathematical text insights dynamically based on app numbers
             viability_status = "EXCELLENT FIT" if highly_interested_count > (len(df) * 0.15) else "UNDERPERFORMING / HIGH RISK"
             spread_verdict = "Premium Competitive Alpha Yield" if market_spread > 0 else "Sub-Market / Discount Baseline Yield"
             
@@ -267,4 +271,4 @@ if st.button("Generate Executive Strategy Assessment"):
             """)
 
 st.markdown("---")
-st.caption("🤖 Powered by your private FinMark Synthetic Repositories and Yahoo Finance Data Streams.")
+st.caption("🤖 Powered by your private FinMark Corporate Framework.")
