@@ -203,7 +203,7 @@ st.write("Instruct the corporate AI Agent to analyze the economic viability of t
 corporate_query = st.text_input(
     "Enterprise System Command:",
     placeholder="Analyze market response vectors for this configuration...",
-    key="corporate_ai_input_v2" 
+    key="corporate_ai_input_final" 
 )
 
 if st.button("Generate Executive Strategy Assessment"):
@@ -227,13 +227,16 @@ if st.button("Generate Executive Strategy Assessment"):
         - Sample Size: 10,000+ synthetic profiles.
         """
         
+        # Track execution locally if the remote API client fails to initialize
+        api_success = False
+        
         if client is not None:
             with st.spinner("AI Agent aggregating cross-tabular segments..."):
                 try:
                     response = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": "You are a strategic financial consultant. Provide a sharp executive analysis based on macroeconomic indicators and live market yield spreads in a crisp corporate style. Use formatting rules cleanly."},
+                            {"role": "system", "content": "You are a strategic financial consultant. Provide a sharp executive analysis based on macroeconomic indicators and live market yield spreads in a crisp corporate style. Use markdown clean formatting layout rules."},
                             {"role": "user", "content": f"{summary_context}\n\nTask: {corporate_query}"}
                         ],
                         temperature=0.4,
@@ -241,21 +244,26 @@ if st.button("Generate Executive Strategy Assessment"):
                     )
                     st.success("🏢 Corporate Strategy Matrix Output:")
                     st.markdown(response.choices[0].message.content)
+                    api_success = True
                 except Exception as e:
                     st.error(f"⚠️ OpenAI System Connection Refused: {e}")
-                    st.info("Switching to Local Analysis Engine due to connection parameter failure.")
-                    client = None # Trigger fallback instantly
+                    st.info("Bypassing crash pipeline: Switching to Local Analysis Engine automatically.")
         
-        # Immediate active fallback if key fails verification
-        if client is None:
-            st.success("🏢 Corporate Strategy Matrix Output (Local Simulation Mode):")
-            st.markdown(f"""
-            ### **Executive Strategic Audit Summary (July 2026)**
+        # Smart rule-based calculation engine for the fallback dashboard output
+        if not api_success:
+            st.success("🏢 Corporate Strategy Matrix Output (Local Simulation Mode Engine):")
             
-            *   **Market Fit Assessment:** The deployment of `{ticker_choice}` ({real_asset_name}) as a **{asset_class}** vehicle demonstrates an empirical conversion factor of **{current_conv_rate}**.
-            *   **Yield Spread Performance:** The product offers **{effective_offered_rate}%** vs the asset baseline of **{live_return}%**, generating a market spread delta of **{round(market_spread, 2)}%**. 
-            *   **Risk & Demographics:** Given a live market volatility profile of **{live_volatility}%**, consumer personas react systematically. The **Risk-Takers** accept this asset layout readily, while conservative segments are bounded by the ₹{min_monthly_commitment:,} monthly threshold.
-            *   **AUM Scalability Forecast:** An immediate capital traction profile of **Extraordinary Velocity** projects an operational AUM inflow of **Base Level Asset Accumulation** over the initial fiscal quarter.
+            # Formulate mathematical text insights dynamically based on app numbers
+            viability_status = "EXCELLENT FIT" if highly_interested_count > (len(df) * 0.15) else "UNDERPERFORMING / HIGH RISK"
+            spread_verdict = "Premium Competitive Alpha Yield" if market_spread > 0 else "Sub-Market / Discount Baseline Yield"
+            
+            st.markdown(f"""
+            ### 🏛️ Enterprise Strategic Audit Summary (July 2026)
+            
+            *   **Market Viability Assessment Matrix:** The deployment configuration for `{ticker_choice}` ({real_asset_name}) within the **{asset_class}** vertical yields an empirical client acquisition conversion footprint of **{current_conv_rate}**. Given these traction vectors, the strategy is categorized as **{viability_status}**.
+            *   **Pricing Yield Strategy Evaluation:** The asset setup leverages a target yield of **{effective_offered_rate}%** against the live baseline indicator of **{live_return}%** sourced via Yahoo Finance data streams. This yields a net tracking margin delta of **{round(market_spread, 2)}%**, operating as a **{spread_verdict}**.
+            *   **Risk Vector & Penetration Analysis:** With a real-time historical asset volatility coefficient of **{live_volatility}%**, consumer personas settle systematically across the conversion curve. High-volatility options naturally compress conversion rates among conservative **Savers**, while **Risk-Taker** and **Investor** demographic nodes absorb the asset readily within their ₹{min_monthly_commitment:,}/month available savings constraints.
+            *   **Capital Scale & Corporate Forecast:** The platform forecasts an immediate initial monthly Assets Under Management (AUM) capital intake vector scaling to **₹{projected_monthly_capital:,.0f}**, offering strong ecosystem stability for the upcoming fiscal quarter.
             """)
 
 st.markdown("---")
