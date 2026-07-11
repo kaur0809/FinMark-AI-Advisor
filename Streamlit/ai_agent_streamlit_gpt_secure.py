@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import pandas as pd
 import numpy as np
+import datetime
 from openai import OpenAI
 import yfinance as yf
 
@@ -9,11 +10,9 @@ import yfinance as yf
 st.set_page_config(page_title="FinMark | B2B Market Simulator Suite", page_icon="🏛️", layout="wide")
 
 # ---------------- 2. SECURE AI CREDENTIAL ENGINE ----------------
-# Standard initialization
 if "OPENAI_API_KEY" in st.secrets and st.secrets["OPENAI_API_KEY"] != "your-actual-sk-api-key-here":
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 else:
-    # Safe academic simulation mode token fallback if secrets are locked out
     client = None
 
 # ---------------- 3. SYSTEM SYNTHETIC DATA LOADER ----------------
@@ -48,7 +47,7 @@ if df is not None:
     if 'savings_rate' not in df.columns: df['savings_rate'] = np.random.uniform(0.10, 0.30, len(df))
 else:
     np.random.seed(42)
-    n_records = 120000
+    n_records = 10000
     df = pd.DataFrame({
         'customer_id': np.arange(1001, 1001 + n_records),
         'income': np.random.normal(750000, 150000, n_records),
@@ -72,38 +71,48 @@ asset_class = st.sidebar.selectbox(
     ["Direct Equity (Stocks)", "Mutual Funds & SIPs", "Derivatives (Options/Futures Pro)"]
 )
 
-# Dynamic Ticker Assignment based on Asset Class selection
+# 🌍 OPEN INPUT ENGINE: Enter ANY Yahoo Finance ticker live
+st.sidebar.markdown("### **Yahoo Finance Ticker Search**")
 if asset_class == "Direct Equity (Stocks)":
-    ticker_choice = st.sidebar.selectbox("Select Target Indian Equity", ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS"])
-    product_display_name = f"Direct Equity Share: {ticker_choice.split('.')[0]}"
+    default_ticker = "RELIANCE.NS"
+    help_text = "Enter any stock ticker (e.g., TCS.NS, INFYS.NS, AAPL, TSLA)"
 elif asset_class == "Mutual Funds & SIPs":
-    ticker_choice = st.sidebar.selectbox("Select Benchmark Mutual Fund", ["MZNUG.BO", "0P0000XW79.BO", "0P0000XVW9.BO"]) 
-    product_display_name = f"Structured Growth Mutual Fund Asset"
+    default_ticker = "MZNUG.BO"
+    help_text = "Enter any Mutual Fund / ETF ticker (e.g., SBI Mutual Fund proxies)"
 else:
-    ticker_choice = st.sidebar.selectbox("Select Underlying Derivatives Index Proxy", ["^NSEI", "^BSESN"])
-    product_display_name = f"High-Leverage Derivative Option Strategy"
+    default_ticker = "^NSEI"
+    help_text = "Enter any index code (e.g., ^NSEI for Nifty 50, ^BSESN for Sensex)"
 
-# ---------------- 5. LIVE YAHOO FINANCE DATA SCRAAPING ----------------
-@st.cache_data(ttl=1800)
+ticker_choice = st.sidebar.text_input(help_text, value=default_ticker).strip().upper()
+
+# ---------------- 5. DYNAMIC YAHOO FINANCE DATA ENGINE ----------------
+@st.cache_data(ttl=900)
 def fetch_live_asset_metrics(ticker_symbol):
     try:
         ticker = yf.Ticker(ticker_symbol)
-        hist = ticker.history(period="1y")
-        if len(hist) > 1:
+        
+        # Pulling clean history dynamically up to 2026
+        end_date = datetime.date(2026, 7, 11)
+        start_date = end_date - datetime.timedelta(days=365)
+        hist = ticker.history(start=start_date, end=end_date)
+        
+        if not hist.empty and len(hist) > 1:
             current_price = hist['Close'].iloc[-1]
             start_price = hist['Close'].iloc[0]
-            trailing_return = ((end_price := current_price - start_price) / start_price) * 100
+            trailing_return = ((current_price - start_price) / start_price) * 100
             volatility = hist['Close'].pct_change().std() * np.sqrt(252) * 100
+            asset_name = ticker.info.get('longName', ticker_symbol)
         else:
-            current_price, trailing_return, volatility = 1500.0, 12.5, 18.0
+            current_price, trailing_return, volatility, asset_name = 100.0, 12.5, 15.0, f"Fallback Profile [{ticker_symbol}]"
     except Exception:
-        current_price, trailing_return, volatility = 1500.0, 12.5, 18.0
-    return round(current_price, 2), round(trailing_return, 2), round(volatility, 2)
+        current_price, trailing_return, volatility, asset_name = 100.0, 12.5, 15.0, f"Fallback Profile [{ticker_symbol}]"
+        
+    return round(current_price, 2), round(trailing_return, 2), round(volatility, 2), asset_name
 
-live_price, live_return, live_volatility = fetch_live_asset_metrics(ticker_choice)
+live_price, live_return, live_volatility, real_asset_name = fetch_live_asset_metrics(ticker_choice)
 
 # --- DISPLAY STREAMED MARKET SUMMARY BANNER ---
-st.info(f"📡 **Yahoo Finance Live Stream Link:** Ticker: `{ticker_choice}` | Current Market Price: **₹{live_price:,}** | Trailing 1-Yr Market Yield: **{live_return}%** | Volatility Profile: **{live_volatility}%**")
+st.info(f"📡 **Yahoo Finance Live Pipeline Connected:** Asset: `{real_asset_name}` (`{ticker_choice}`) | Current Price: **₹{live_price:,}** | Trailing 1-Yr Market Return: **{live_return}%** | Volatility Profile: **{live_volatility}%**")
 
 # Macro Environment Metrics Panel
 st.subheader("📊 Ecosystem Base Overview (TAM Node Count)")
@@ -116,35 +125,33 @@ m4.metric("Ecosystem Mean Risk Vector", f"{int(df['credit_score'].mean())} Score
 st.markdown("---")
 
 # ---------------- 6. PRODUCT PRICING SANDBOX CONTROLS ----------------
-st.subheader(f"🚀 Product Parameter Configuration: {product_display_name}")
+st.subheader(f"🚀 Product Parameter Configuration: launched via {real_asset_name}")
 
 col_p1, col_p2 = st.columns(2)
 with col_p1:
-    offered_premium_boost = st.slider("Target Yield Premium Over Asset Return (%)", min_value=-5.0, max_value=5.0, value=1.5, step=0.25)
+    offered_premium_boost = st.slider("Target Yield Premium Over Asset Base Return (%)", min_value=-5.0, max_value=5.0, value=1.0, step=0.25)
 with col_p2:
     min_monthly_commitment = st.number_input("Minimum Threshold Monthly Commitment (₹)", min_value=500, max_value=25000, value=3000, step=500)
 
 effective_offered_rate = live_return + offered_premium_boost
 
 # ---------------- 7. STRUCTURAL PREDICTIVE SIMULATION MATRIX ----------------
-# Consumers weigh alternative assets vs live market metrics
 market_spread = effective_offered_rate - live_return
 
-# Persona Affinity Maps tailored by asset profile risks
+# Persona Risk Alignment System
 if asset_class == "Derivatives (Options/Futures Pro)":
-    # High risk assets favor Risk-Takers heavily over standard Savers
-    persona_weights = {'saver': -20, 'investor': 20, 'risk-taker': 55, 'spender': 5}
-    risk_factor_modifier = live_volatility * 0.5
+    persona_weights = {'saver': -25, 'investor': 15, 'risk-taker': 60, 'spender': 5}
+    risk_factor_modifier = live_volatility * 0.6
 elif asset_class == "Mutual Funds & SIPs":
     persona_weights = {'saver': 40, 'investor': 45, 'risk-taker': 15, 'spender': 5}
     risk_factor_modifier = 0
 else:
-    persona_weights = {'saver': 15, 'investor': 50, 'risk-taker': 35, 'spender': 5}
-    risk_factor_modifier = live_volatility * 0.2
+    persona_weights = {'saver': 10, 'investor': 50, 'risk-taker': 35, 'spender': 5}
+    risk_factor_modifier = live_volatility * 0.25
 
 df['persona_score'] = df['persona'].str.lower().map(persona_weights).fillna(15)
 df['credit_booster'] = (df['credit_score'] - 300) / 550 * 20
-spread_bonus = np.clip((market_spread * 4) + (effective_offered_rate * 0.5), -25, 25)
+spread_bonus = np.clip((market_spread * 4) + (effective_offered_rate * 0.4), -25, 25)
 
 df['total_interest_score'] = df['persona_score'] + df['credit_booster'] + spread_bonus - risk_factor_modifier
 
@@ -153,8 +160,8 @@ df['monthly_savings_est'] = (df['income'] / 12) * df['savings_rate']
 
 df['reaction'] = np.select(
     [
-        (df['total_interest_score'] >= 52) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.75)),
-        (df['total_interest_score'] >= 36) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.45))
+        (df['total_interest_score'] >= 50) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.70)),
+        (df['total_interest_score'] >= 35) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.45))
     ],
     ['Highly Interested (Immediate Buyer)', 'Moderately Interested (Marketing Target)'],
     default='Not Interested (Churned / Insufficient Funds)'
@@ -206,6 +213,7 @@ if st.button("Generate Executive Strategy Assessment"):
         Simulation Parameters:
         - Target Asset Category: {asset_class}
         - Selected Market Ticker: {ticker_choice}
+        - Asset Official Corporate Name: {real_asset_name}
         - Live Asset Benchmark Return: {live_return}%
         - Configured Offered Return Rate: {effective_offered_rate}%
         - Product Volatility Vector: {live_volatility}%
@@ -231,11 +239,10 @@ if st.button("Generate Executive Strategy Assessment"):
                 except Exception as e:
                     st.error(f"⚠️ OpenAI System Connection Refused: {e}")
         else:
-            # High-fidelity offline strategic report generator if OpenAI API lacks active credits
             st.success("🏢 Corporate Strategy Matrix Output (Local Simulation Mode):")
             st.markdown(f"""
             ### **Executive Strategic Audit Summary**
-            * **Market Fit Assessment:** The deployment of `{ticker_choice}` as a **{asset_class}** vehicle demonstrates an empirical conversion factor of **{(highly_interested_count / len(df)) * 100:.2f}%**.
+            * **Market Fit Assessment:** The deployment of `{ticker_choice}` ({real_asset_name}) as a **{asset_class}** vehicle demonstrates an empirical conversion factor of **{(highly_interested_count / len(df)) * 100:.2f}%**.
             * **Risk Modeling:** Given a live market volatility footprint of **{live_volatility}%**, the synthetic consumer segment reacts systematically. The **Risk-Taker** parameters demonstrate high affinity vectors, whereas conservative pools are heavily constrained by the ₹{min_monthly_commitment:,} capital requirement.
             * **AUM Scalability:** A monthly projected capital traction profile of **₹{projected_monthly_capital:,.0f}** indicates strong institutional stability under the current offered return profile.
             """)
