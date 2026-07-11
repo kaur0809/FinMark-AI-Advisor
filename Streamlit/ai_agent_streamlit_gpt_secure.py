@@ -221,12 +221,12 @@ st.markdown("---")
 st.subheader("🧠 FinMark Corporate AI Strategist")
 
 if client is None:
-    st.info("💡 To activate live AI text generation, enter your OpenAI API key in the authentication panel on the left sidebar.")
+    st.info("💡 Running in Local Simulation Engine. (To activate generative GPT-4o intelligence, input an active OpenAI key into the sidebar).")
 
 corporate_query = st.text_input(
     "Enterprise System Command:",
     placeholder="Analyze market response vectors for this configuration...",
-    key="corporate_ai_input_final_v4" 
+    key="corporate_ai_input_dynamic_v5" 
 )
 
 if st.button("Generate Executive Strategy Assessment"):
@@ -246,7 +246,6 @@ if st.button("Generate Executive Strategy Assessment"):
         - Product Volatility Vector: {live_volatility}%
         - Calculated Conversion Rate: {current_conv_rate}
         - Projected Monthly AUM Capital Flow: ₹{projected_monthly_capital:,}
-        - Sample Size: 10,000+ synthetic profiles.
         """
         
         api_success = False
@@ -269,19 +268,45 @@ if st.button("Generate Executive Strategy Assessment"):
                 except Exception as e:
                     st.error(f"⚠️ OpenAI API Rejected Call: {e}")
         
+        # Smart keyword-responsive local engine to differentiate answers dynamically
         if not api_success:
-            st.success("🏢 Corporate Strategy Matrix Output (Local Simulation Mode Engine):")
-            viability_status = "EXCELLENT FIT" if highly_interested_count > (len(df) * 0.15) else "UNDERPERFORMING / HIGH RISK"
-            spread_verdict = "Premium Competitive Alpha Yield" if market_spread > 0 else "Sub-Market / Discount Baseline Yield"
+            st.success("🏢 Corporate Strategy Matrix Output (Local Intelligent Engine):")
             
-            st.markdown(f"""
-            ### 🏛️ Enterprise Strategic Audit Summary (July 2026)
+            q_lower = corporate_query.lower()
             
-            *   **Market Viability Assessment Matrix:** The deployment configuration for `{ticker_choice}` ({real_asset_name}) within the **{asset_class}** vertical yields an empirical client acquisition conversion footprint of **{current_conv_rate}**. Given these traction vectors, the strategy is categorized as **{viability_status}**.
-            *   **Pricing Yield Strategy Evaluation:** The asset setup leverages a target yield of **{effective_offered_rate}%** against the live baseline indicator of **{live_return}% sourced via Yahoo Finance data streams. This yields a net tracking margin delta of **{round(market_spread, 2)}%**, operating as a **{spread_verdict}**.
-            *   **Risk Vector & Penetration Analysis:** With a real-time historical asset volatility coefficient of **{live_volatility}%**, consumer personas settle systematically across the conversion curve. High-volatility options naturally compress conversion rates among conservative **Savers**, while **Risk-Taker** and **Investor** demographic nodes absorb the asset readily within their ₹{min_monthly_commitment:,}/month available savings constraints.
-            *   **Capital Scale & Corporate Forecast:** The platform forecasts an immediate initial monthly Assets Under Management (AUM) capital intake vector scaling to **₹{projected_monthly_capital:,.0f}**, offering strong ecosystem stability for the upcoming fiscal quarter.
-            """)
+            if "risk" in q_lower or "volatility" in q_lower or "shock" in q_lower:
+                st.markdown(f"""
+                ### ⚖️ Risk & Volatility Stress Audit
+                * **Risk Analysis:** Under a real-time historical volatility footprint of **{live_volatility}%** for `{ticker_choice}`, conservative user pools are heavily restricted. 
+                * **Demographic Sensitivity:** A macro shock will quickly drop the interest scores of your 'Savers' and 'Investors'. The current **{current_conv_rate}** conversion rate relies almost entirely on your aggressive 'Risk-Taker' core.
+                * **Recommendation:** To protect capital flows against high asset volatility, consider lowering the threshold monthly commitment below ₹{min_monthly_commitment:,}.
+                """)
+                
+            elif "sustainable" in q_lower or "viable" in q_lower or "spread" in q_lower:
+                spread_val = round(effective_offered_rate - live_return, 2)
+                st.markdown(f"""
+                ### 📊 Yield Spread Sustainability Assessment
+                * **Alpha Delta:** Your product premium tracking margin is currently **{spread_val}%** relative to the live asset baseline return of **{live_return}%**.
+                * **Funnel Efficiency:** With an immediate acquisition rate of **{current_conv_rate}**, this layout is highly attractive to consumers. However, if your tracking margin spread is negative, you are heavily subsidizing this acquisition structure at a loss.
+                * **Recommendation:** Keep the tracking margin positive by managing the slider premium dynamically as the live market shifts.
+                """)
+                
+            elif "aum" in q_lower or "scale" in q_lower or "inflow" in q_lower:
+                st.markdown(f"""
+                ### 🏛️ Capital Scale & AUM Velocity Forecast
+                * **Asset Traction:** The configuration shows a total projected capital flow velocity of **₹{projected_monthly_capital:,.0f} per month**.
+                * **Funnel Blockers:** Market penetration is structurally bounded by the ₹{min_monthly_commitment:,} monthly threshold filter. 
+                * **Recommendation:** To maximize onboarding velocity and capture a wider segment of the TAM, lower the minimum commitment slider slightly to activate the mid-tier saver demographic nodes.
+                """)
+                
+            else:
+                # Catch-all general audit summary
+                viability = "EXCELLENT FIT" if highly_interested_count > (len(df) * 0.15) else "UNDERPERFORMING / CONTRACTION RISK"
+                st.markdown(f"""
+                ### 🏛️ General Strategic Audit Summary
+                * **Configuration Fit:** The application deployment architecture for `{ticker_choice}` inside the **{asset_class}** category returns an operational conversion footprint of **{current_conv_rate}**, qualifying this launch strategy as an ecosystem **{viability}**.
+                * **Financial Liquidity Capture:** The sandbox tracks a steady initial target intake projection of **₹{projected_monthly_capital:,.0f}** in monthly assets under management (AUM) capital inflows based on the current ₹{min_monthly_commitment:,} parameter profile.
+                """)
 
 st.markdown("---")
 st.caption("🤖 Powered by your private FinMark Corporate Framework.")
