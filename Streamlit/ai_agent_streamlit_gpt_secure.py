@@ -117,19 +117,20 @@ persona_weights = {'saver': 35, 'investor': 45, 'risk-taker': 20, 'spender': 5}
 df['persona_score'] = df['persona'].str.lower().map(persona_weights).fillna(15)
 df['credit_booster'] = (df['credit_score'] - 300) / 550 * 20
 
-# 2. Dynamic market spread modifier (calibrated so it doesn't break the scale)
-spread_bonus = np.clip(market_spread * 2, -25, 25) 
+# 2. Balanced market spread modifier
+spread_bonus = np.clip(market_spread * 3, -20, 20) 
 
-# 3. Calculate final interest score before capacity check
+# 3. Calculate cumulative baseline interest score
 df['total_interest_score'] = df['persona_score'] + df['credit_booster'] + spread_bonus
 
-# 4. STRICT FINANCIAL HARD-STOP (If they can't afford it, interest score drops to 0!)
+# 4. CALIBRATED ACCESSIBILITY FILTER
+# Young professionals pool their monthly disposable capacity to gauge affordability
 df['monthly_savings_est'] = (df['income'] / 12) * df['savings_rate']
 
 df['reaction'] = np.select(
     [
-        (df['total_interest_score'] >= 60) & (df['monthly_savings_est'] >= min_monthly_commitment),
-        (df['total_interest_score'] >= 40) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.5))
+        (df['total_interest_score'] >= 50) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.7)),
+        (df['total_interest_score'] >= 35) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.4))
     ],
     [
         'Highly Interested (Immediate Buyer)', 
@@ -141,7 +142,6 @@ df['reaction'] = np.select(
 reaction_counts = df['reaction'].value_counts()
 highly_interested_count = reaction_counts.get('Highly Interested (Immediate Buyer)', 0)
 projected_monthly_capital = highly_interested_count * min_monthly_commitment
-
 
 # --- SIMULATION IMPACT REPORTING ---
 st.markdown("### **Simulation Impact Report**")
