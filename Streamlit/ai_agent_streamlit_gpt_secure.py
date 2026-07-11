@@ -203,15 +203,18 @@ st.write("Instruct the corporate AI Agent to analyze the economic viability of t
 corporate_query = st.text_input(
     "Enterprise System Command:",
     placeholder="Analyze market response vectors for this configuration...",
-    key="corporate_ai_input" 
+    key="corporate_ai_input_v2" 
 )
 
 if st.button("Generate Executive Strategy Assessment"):
     if corporate_query.strip() == "":
         st.warning("Please enter a question or instruction for the AI Agent.")
     else:
+        # Pre-compile variables explicitly to prevent inner scope string interpolation crashes
+        current_conv_rate = f"{(highly_interested_count / len(df)) * 100:.2f}%"
+        
         summary_context = f"""
-        You are an institutional B2B Financial Strategy Consultant auditing a simulated product rollout.
+        You are an institutional B2B Financial Strategy Consultant auditing a simulated product rollout in July 2026.
         Simulation Parameters:
         - Target Asset Category: {asset_class}
         - Selected Market Ticker: {ticker_choice}
@@ -219,8 +222,8 @@ if st.button("Generate Executive Strategy Assessment"):
         - Live Asset Benchmark Return: {live_return}%
         - Configured Offered Return Rate: {effective_offered_rate}%
         - Product Volatility Vector: {live_volatility}%
-        - Calculated Conversion Rate: {(highly_interested_count / len(df)) * 100:.2f}%
-        - Projected Monthly AUM Capital Flow: ₹{projected_monthly_capital}
+        - Calculated Conversion Rate: {current_conv_rate}
+        - Projected Monthly AUM Capital Flow: ₹{projected_monthly_capital:,}
         - Sample Size: 10,000+ synthetic profiles.
         """
         
@@ -230,7 +233,7 @@ if st.button("Generate Executive Strategy Assessment"):
                     response = client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": "You are a strategic financial consultant. Provide executive analysis based on macroeconomic indicators and live market yield spreads in a crisp corporate style."},
+                            {"role": "system", "content": "You are a strategic financial consultant. Provide a sharp executive analysis based on macroeconomic indicators and live market yield spreads in a crisp corporate style. Use formatting rules cleanly."},
                             {"role": "user", "content": f"{summary_context}\n\nTask: {corporate_query}"}
                         ],
                         temperature=0.4,
@@ -240,13 +243,19 @@ if st.button("Generate Executive Strategy Assessment"):
                     st.markdown(response.choices[0].message.content)
                 except Exception as e:
                     st.error(f"⚠️ OpenAI System Connection Refused: {e}")
-        else:
+                    st.info("Switching to Local Analysis Engine due to connection parameter failure.")
+                    client = None # Trigger fallback instantly
+        
+        # Immediate active fallback if key fails verification
+        if client is None:
             st.success("🏢 Corporate Strategy Matrix Output (Local Simulation Mode):")
             st.markdown(f"""
-            ### **Executive Strategic Audit Summary**
-            * **Market Fit Assessment:** The deployment of `{ticker_choice}` ({real_asset_name}) as a **{asset_class}** vehicle demonstrates an empirical conversion factor of **{(highly_interested_count / len(df)) * 100:.2f}%**.
-            * **Risk Modeling:** Given a live market volatility footprint of **{live_volatility}%**, the synthetic consumer segment reacts systematically. The **Risk-Taker** parameters demonstrate high affinity vectors, whereas conservative pools are heavily constrained by the ₹{min_monthly_commitment:,} capital requirement.
-            * **AUM Scalability:** A monthly projected capital traction profile of **₹{projected_monthly_capital:,.0f}** indicates strong institutional stability under the current offered return profile.
+            ### **Executive Strategic Audit Summary (July 2026)**
+            
+            *   **Market Fit Assessment:** The deployment of `{ticker_choice}` ({real_asset_name}) as a **{asset_class}** vehicle demonstrates an empirical conversion factor of **{current_conv_rate}**.
+            *   **Yield Spread Performance:** The product offers **{effective_offered_rate}%** vs the asset baseline of **{live_return}%**, generating a market spread delta of **{round(market_spread, 2)}%**. 
+            *   **Risk & Demographics:** Given a live market volatility profile of **{live_volatility}%**, consumer personas react systematically. The **Risk-Takers** accept this asset layout readily, while conservative segments are bounded by the ₹{min_monthly_commitment:,} monthly threshold.
+            *   **AUM Scalability Forecast:** An immediate capital traction profile of **Extraordinary Velocity** projects an operational AUM inflow of **Base Level Asset Accumulation** over the initial fiscal quarter.
             """)
 
 st.markdown("---")
