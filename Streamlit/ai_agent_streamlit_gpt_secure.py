@@ -125,43 +125,45 @@ m4.metric("Ecosystem Mean Risk Vector", f"{int(df['credit_score'].mean())} Score
 st.markdown("---")
 
 # ---------------- 6. PRODUCT PRICING SANDBOX CONTROLS ----------------
-st.subheader(f"🚀 Product Parameter Configuration: launched via {real_asset_name}")
+st.subheader(f"🚀 Product Parameter Configuration: Launched via {real_asset_name}")
 
 col_p1, col_p2 = st.columns(2)
 with col_p1:
-    offered_premium_boost = st.slider("Target Yield Premium Over Asset Base Return (%)", min_value=-5.0, max_value=5.0, value=1.0, step=0.25)
+    # 🎯 FIX: Changed from a small premium modifier to direct selection of the Total Target Return
+    effective_offered_rate = st.slider("Total Target Offered Annual Return Rate (%)", min_value=1.0, max_value=40.0, value=14.0, step=0.5)
 with col_p2:
-    min_monthly_commitment = st.number_input("Minimum Threshold Monthly Commitment (₹)", min_value=500, max_value=25000, value=3000, step=500)
-
-effective_offered_rate = live_return + offered_premium_boost
+    min_monthly_commitment = st.number_input("Minimum Threshold Monthly Commitment (₹)", min_value=500, max_value=50000, value=3000, step=500)
 
 # ---------------- 7. STRUCTURAL PREDICTIVE SIMULATION MATRIX ----------------
+# The market spread measures how much your customized product beats the live asset's baseline performance
 market_spread = effective_offered_rate - live_return
 
 # Persona Risk Alignment System
 if asset_class == "Derivatives (Options/Futures Pro)":
     persona_weights = {'saver': -25, 'investor': 15, 'risk-taker': 60, 'spender': 5}
-    risk_factor_modifier = live_volatility * 0.6
+    risk_factor_modifier = live_volatility * 0.4
 elif asset_class == "Mutual Funds & SIPs":
     persona_weights = {'saver': 40, 'investor': 45, 'risk-taker': 15, 'spender': 5}
     risk_factor_modifier = 0
 else:
     persona_weights = {'saver': 10, 'investor': 50, 'risk-taker': 35, 'spender': 5}
-    risk_factor_modifier = live_volatility * 0.25
+    risk_factor_modifier = live_volatility * 0.15
 
 df['persona_score'] = df['persona'].str.lower().map(persona_weights).fillna(15)
 df['credit_booster'] = (df['credit_score'] - 300) / 550 * 20
-spread_bonus = np.clip((market_spread * 4) + (effective_offered_rate * 0.4), -25, 25)
+
+# Balanced spread calculation to drive adoption kinetics
+spread_bonus = np.clip(market_spread * 2.5, -20, 25)
 
 df['total_interest_score'] = df['persona_score'] + df['credit_booster'] + spread_bonus - risk_factor_modifier
 
-# Calibrated Affordability Hard-Stops
+# Calibrated Affordability Filters
 df['monthly_savings_est'] = (df['income'] / 12) * df['savings_rate']
 
 df['reaction'] = np.select(
     [
-        (df['total_interest_score'] >= 50) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.70)),
-        (df['total_interest_score'] >= 35) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.45))
+        (df['total_interest_score'] >= 48) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.70)),
+        (df['total_interest_score'] >= 32) & (df['monthly_savings_est'] >= (min_monthly_commitment * 0.45))
     ],
     ['Highly Interested (Immediate Buyer)', 'Moderately Interested (Marketing Target)'],
     default='Not Interested (Churned / Insufficient Funds)'
